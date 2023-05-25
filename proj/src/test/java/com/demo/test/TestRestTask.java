@@ -7,13 +7,14 @@ import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
-import io.restassured.specification.ResponseSpecification;
 import org.testng.annotations.Test;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class TestRestTask {
+
 
     @Test()
     public void testGet(){
@@ -31,39 +32,66 @@ public class TestRestTask {
     }
 
     @Test()
-    public void testPost(){
-        Map<String, String> headers = new HashMap<String, String>() {{
-            put("Content-Type", ContentType.JSON.toString());
-        }};
-        String apiURL ="http://localhost:8080/api/users";
-
+    public void testPost() throws IOException {
+       
+        String apiURL ="http://localhost:8080/api/users?userId=23";
         RequestSpecification spec = RestAssured.given();
-        //TODO:
+
+        String resp = spec
+                        .log().all()
+                        .get(apiURL)
+                        .then()
+                        .assertThat()
+                        .statusCode(200)
+                        .and()
+                        .contentType(ContentType.JSON.toString())
+                        .extract()
+                        .body()
+                        .asString();
+
+
+        User userFromServer = Helper.initFromJsonUser(resp);
+        System.out.println("response:"+resp);
+ //my test that parsing works
+
+        String usersJson = Helper.GetUserJson(); // this is like we did request to server
+        User users = Helper.initFromJsonUser(usersJson);
+
+        System.out.println("response:"+usersJson);
     }
 
     @Test()
-    public void testGetWithParams(){
+    public void testGetWithParams() throws IOException {
+
         RequestSpecification spec = RestAssured.given();
-        String apiURL ="http://localhost:8080/api/users";
-       //TODO:
-    }
+        String apiURL ="http://localhost:8080/api/users?userId=25";
 
-    @Test()
-    public void testGetWithParamsXml(){
-        RequestSpecification spec = RestAssured.given();
 
-        //String apiURL ="http://localhost:8080/api/mytest?param1=val1";
-        String apiURL ="http://localhost:8080/api/users";
-        spec.queryParam("userId", 25);
-        ValidatableResponse resp = spec.get(apiURL).then();
-        String body = resp.extract().body().asString();
+        String resp = spec
+                .log().all()
+                .get(apiURL)
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .and()
+                .contentType(ContentType.XML.toString())
+                .extract()
+                .body()
+                .asString();
 
-        User user = Helper.initUserFromXml(body);
-        System.out.println(user);
-        //resp.extract().body().as(JsonPath.class);
-        /*System.out.println(resp.extract().statusCode());
-        System.out.println(resp.extract().contentType());
-        System.out.println(resp.extract().body().asString());*/
+
+        User userFromServer = Helper.initUserFromXml(resp);
+        System.out.println("response:"+resp);
+
+
+        //my test that parsing works
+
+
+        String xml = Helper.GetUserXml();
+        User user= Helper.initUserFromXml(xml);
+
+        System.out.println("response:"+xml);
+
     }
 
 }
